@@ -1,8 +1,8 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "kind": "recovered-packaged-runtime",
-  "recoveredAt": "2026-10-23T12:31:22.549Z",
-  "source": "cuteQ-0.1.0-portable.exe/resources/app.asar",
+  "recoveredAt": "2026-10-23T12:31:27.349Z",
+  "source": "cuteQ-0.2.0-portable.exe/resources/app.asar",
   "exclusions": [
     "node_modules",
     "resources/speech (downloadable models)"

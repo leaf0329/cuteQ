@@ -12,3 +12,5 @@
 - https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
 - https://github.com/FunAudioLLM/SenseVoice
 - https://github.com/snakers4/silero-vad
+
+动画新增原画使用内置 image_gen 生成，保存于 design/sources/calm-v1 与 design/sources/redraw-v2。构建阶段使用 RIFE ncnn Vulkan 生成连续中间帧（MIT；https://github.com/nihui/rife-ncnn-vulkan），工具与模型仅用于本机制作，不作为桌宠运行依赖。

@@ -25,6 +25,8 @@
 
 ## 字体与依赖
 
+cuteQ 0.2 新增的动作原画与提示词见 [本轮素材索引](design/sources/README.md)。这些修改继续保留上述署名及第三方参考边界。
+
 高清待机与面板立绘的原图、生成提示词和处理记录见 [idle-hq-v1](design/sources/idle-hq-v1/README.md)，适用上述新增贡献及第三方参考边界。
 
 `assets/fonts/` 中 Noto Serif SC 字体使用 SIL Open Font License，完整许可见 [OFL.txt](assets/fonts/OFL.txt)。第三方代码和依赖保持其各自许可，使用时应一并遵守相应声明。

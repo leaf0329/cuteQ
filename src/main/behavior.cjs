@@ -1,5 +1,5 @@
 'use strict';
-const {clips,recoveryClip}=require('../renderer/motion.js');
+const {clips}=require('../renderer/motion.js');
 
 const ACTIONS = Object.freeze({
   'meal-break':[7],'token-game':[20],'tail-sway':[0],'story-recover':[0],
@@ -42,17 +42,17 @@ class Companion {
     this.now = now; this.random = random;
     this.action = 'idle'; this.priority = 0; this.until = 0; this.started = now();
     this.message = ''; this.revision = 0; this.mode = 'company'; this.focusUntil = 0;
-    this.energy = 80; this.fullness = 55; this.lastDecay = now(); this.nextIdle = now() + 3000 + this.random()*2000;
-    this.category='other';this.nextExpressive=now()+5000;
-    this.recentIdle=[];this.contextAfter=now()+60000;
+    this.energy = 80; this.fullness = 55; this.lastDecay = now(); this.nextIdle = now() + 45000 + this.random()*45000;
+    this.category='other';this.nextExpressive=now()+240000;
+    this.recentIdle=[];this.contextAfter=now()+240000;
     this.cooldowns = new Map(); this.locked = false; this.away = false; this.chatBusy = false;
     this.focusCount = 0;
-    this.recovery=null;this.storyCooldowns=new Map();this.nextStory=now()+15000+this.random()*10000;
+    this.recovery=null;this.storyCooldowns=new Map();this.nextStory=now()+240000+this.random()*180000;
     this.utterance = null;
   }
   pick(items) { return items[Math.floor(this.random() * items.length)]; }
   dailyAction(){
-    const pool=DAILY.filter(r=>(!r.categories||r.categories.includes(this.category))&&(!r.hungry||this.fullness<45)&&(!r.full||this.fullness>80)&&!this.recentIdle.includes(r.action)&&this.now()>=(this.cooldowns.get('action:'+r.action)||0));
+    const pool=DAILY.filter(r=>['think','review'].includes(r.action)&&(!r.categories||r.categories.includes(this.category))&&!this.recentIdle.includes(r.action)&&this.now()>=(this.cooldowns.get('action:'+r.action)||0));
     let draw=this.random()*pool.reduce((n,r)=>n+r.weight,0);
     for(const r of pool){draw-=r.weight;if(draw<=0)return r;}return null;
   }
@@ -66,21 +66,15 @@ class Companion {
     this.recovery=null;
     this.started = this.now(); this.until = this.started + duration; this.revision++;
     if(['hum','meal-break','token-game'].includes(action)){
-      this.storyCooldowns.set(action,this.now()+90000);this.nextStory=this.now()+25000+this.random()*15000;
+      this.storyCooldowns.set(action,this.now()+300000);this.nextStory=this.now()+300000+this.random()*240000;
     }
     const rule=DAILY.find(r=>r.action===action);if(rule)this.cooldowns.set('action:'+action,this.now()+rule.cooldown);
-    if(priority>0||action==='idle')this.nextIdle=this.until+3000+this.random()*2000;
+    if(priority>0||action==='idle')this.nextIdle=this.until+45000+this.random()*45000;
     return true;
   }
   interact(kind) {
+    if(kind==='pet'&&['eat','meal-break','sneak','hum','token-game','review'].includes(this.action)&&this.now()<this.until)return false;
     this.utterance = null;
-    if(kind==='pet'&&this.action==='story-recover'&&this.now()<this.until)return false;
-    if(kind==='pet'&&['hum','meal-break','token-game'].includes(this.action)&&this.now()<this.until){
-      const recovery=recoveryClip(this.action,this.now()-this.started);
-      const line=this.action==='hum'?'咳……刚才哼到哪儿了？':this.action==='token-game'?'……就一口。':'我就吃一口，马上回来。';
-      if(!this.play('story-recover',line,1800,80))return false;
-      this.recovery=recovery;this.until=this.started+recovery.times.reduce((a,b)=>a+b,0);return true;
-    }
     if(['meal-break','token-game','tail-sway'].includes(kind))return this.play(kind,'',5000,80);
     if (kind === 'drag') return this.play('drag', '呆毛！别碰歪了！', 60000, 100);
     if (kind === 'drop') { this.until = 0; return this.play('protest', '好啦，这里也行。', 2800, 100); }
@@ -102,8 +96,10 @@ class Companion {
     return true;
   }
   respond(text, expression = 'happy') {
-    if (this.chatBusy && this.action === 'think') this.until = 0;
-    this.play(expression, '', 3500, 40);
+    if (this.action === 'idle' || this.now() >= this.until) {
+      this.play(expression, '', 3500, 40);
+    }
+    this.message = '';
     this.utterance = { text: text.slice(0, 180), until: this.now() + Math.min(18000, Math.max(6000, text.length * 100)) };
   }
   context({ idleSeconds = 0, locked = false, fullscreen = false, category = 'other' } = {}) {
@@ -118,7 +114,7 @@ class Companion {
     if (this.away && idleSeconds < 5) {
       this.away = false; this.until = 0; this.play('wake', '我醒着呢……刚才只是闭了一下眼睛。', 3500, 50); return;
     }
-    if (this.mode !== 'company' || fullscreen || this.chatBusy || this.now()<this.contextAfter) return;
+    if (this.mode !== 'company' || fullscreen || this.chatBusy || this.now()<this.contextAfter || this.now()<this.until) return;
     const lines = {
       code: ['think', '等一下，好像有点思路了……'],
       media: ['happy', '一起看一会儿？我不挡着。'],
@@ -126,7 +122,7 @@ class Companion {
       reading: ['think', '慢慢看，我不催你。'],
     };
     if (lines[category] && this.now() >= (this.cooldowns.get(category) || 0)) {
-      if (this.play(...lines[category], 3500, 10)) {this.cooldowns.set(category, this.now() + 15 * 60000);this.contextAfter=this.now()+180000;}
+      if (this.play(lines[category][0], '', 6500, 10)) {this.cooldowns.set(category, this.now() + 15 * 60000);this.contextAfter=this.now()+300000;}
     }
   }
   tick() {
@@ -140,28 +136,25 @@ class Companion {
     }
     if (now >= this.until && !this.chatBusy && this.action !== 'idle' && !(this.away && this.action === 'sleep')) this.play(['sleep','curl'].includes(this.action)?'wake':'idle', '', 0, 0);
     if (now >= this.nextIdle && !this.locked && !this.away && !this.chatBusy && this.mode === 'company' && now >= this.until) {
-      // 页面环境增加偏好，不把其他剧情永久排除；低饱腹时优先休息吃东西。
-      const storyCandidates=this.fullness<35?['meal-break','meal-break','hum','token-game']:this.category==='media'?['hum','hum','token-game','meal-break']:this.category==='game'?['token-game','token-game','hum','meal-break']:['hum','token-game','meal-break'];
+      const storyCandidates=['meal-break'];
       const available=storyCandidates.filter(a=>now>=(this.storyCooldowns.get(a)||0));
       if(now>=this.nextStory&&available.length){
         const action=this.pick(available);this.play(action,'',5000,5);
-        this.storyCooldowns.set(action,now+90000);this.nextStory=now+25000+this.random()*15000;
-        this.nextExpressive=this.until+6000;return this.snapshot();
+        this.nextExpressive=this.until+240000;return this.snapshot();
       }
-      // 3–5 秒后可动一下，但短表演与小剧情有独立冷却，不把待机变成连续演出。
       const expressive=now>=this.nextExpressive?this.dailyAction()?.action:null;
-      const candidates=['shift','settle','breathe','tail-sway'].filter(a=>!this.recentIdle.includes(a));
-      const action=expressive||this.pick(candidates.length?candidates:['shift']);
-      this.play(action,'',3200,5);
-      if(expressive)this.nextExpressive=this.until+6000+this.random()*4000;
+      const action=expressive||'breathe';
+      this.play(action,'',6500,5);
+      if(expressive)this.nextExpressive=this.until+240000+this.random()*120000;
       this.recentIdle=[...this.recentIdle,action].slice(-3);
-      this.nextIdle = this.until + 3000 + this.random() * 2000;
+      this.nextIdle = this.until + 45000 + this.random() * 45000;
     }
     return this.snapshot();
   }
   canWander() { return !this.locked && !this.away && !this.chatBusy && this.mode === 'company' && this.now() >= this.until; }
   snapshot() {
-    return { action: this.action, frames: ACTIONS[this.action], message: this.message || (this.utterance && this.now() < this.utterance.until ? this.utterance.text : ''), started: this.started,
+    const utterance=this.utterance && this.now() < this.utterance.until?this.utterance:null;
+    return { action: this.action, frames: ACTIONS[this.action], message: utterance?.text || this.message, messageUntil:utterance?.until || this.until, started: this.started,
       until: this.until, revision: this.revision, mode: this.mode, focusUntil: this.focusUntil,
       fullness: Math.round(this.fullness), focusCount: this.focusCount, chatBusy: this.chatBusy,recovery:this.recovery };
   }

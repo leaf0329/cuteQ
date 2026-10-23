@@ -19,7 +19,7 @@ const arg = key => process.argv.find(v => v.startsWith(`--${key}=`))?.slice(key.
 const testMode = Boolean(arg('test-user-data'));
 if (testMode) app.setPath('userData', path.resolve(arg('test-user-data')));
 let pet, panel, tray, store, vault, settings, timer, stopMonitor, quitting = false, locked = false;
-let drag = null, target = null, walkRemainder = 0, walkTravel = 0, nextWalk = Date.now() + 6000 + Math.random()*4000, previousTick = Date.now();
+let drag = null, target = null, walkRemainder = 0, walkTravel = 0, nextWalk = Date.now() + 180000 + Math.random()*120000, previousTick = Date.now();
 let context = {}, lastForeign = {}, lastPointer = '', lastState = '', lastPoll = 0, lastEnvironment = 0;
 let controller = null, history = [], capture = null, captureAt = 0, autoVisionAt = Date.now() + 120000;
 let runtime, backend, backendReady, backendError = '', remoteVault, speech, speechDraft = '', speechTimer, speechMode = 'overheard', listeningRequest = false;
@@ -29,7 +29,7 @@ const brain = new Companion();
 // 仅隔离集成测试可读几何诊断；正式启动不暴露窗口数据或新增 IPC。
 if(testMode)module.exports.nativeGeometry=()=>({age:Date.now()-windowsSeen,enabled:settings?.windowEdges,windows:visibleWindows});
 if(testMode){
- module.exports.startTestWalk=(position,distance)=>{stopWalk();support=null;flight=null;settings.autoWander=true;brain.setMode('company');brain.until=0;pet.setBounds(safeBounds(position));target=pet.getBounds().x+distance;nextWalk=Date.now();};
+ module.exports.startTestWalk=(position,distance)=>{stopWalk();support=null;flight=null;settings.autoWander=true;brain.away=false;lastEnvironment=Date.now()+10000;brain.setMode('company');brain.until=0;pet.setBounds(safeBounds(position));target=pet.getBounds().x+distance;nextWalk=Date.now();};
  module.exports.walkState=()=>({bounds:pet.getBounds(),travel:walkTravel,remainder:walkRemainder,target,action:brain.action,started:brain.started});
 }
 // Windows 的透明宿主窗口至少为 32px；角色本身仍严格按百分比缩放。
@@ -163,7 +163,6 @@ async function chat(text, image, automatic = false, requestId = null, kind = 'di
   if (controller) throw new Error('我还在回复，可以先取消上一条。');
   if (typeof text !== 'string' || !text.trim() || text.length > 8000) throw new Error('请填写 1 到 8000 字的问题。');
   const current = new AbortController(); controller = current; brain.chatBusy = true; stopWalk();
-  brain.play('think', automatic ? '' : '让我把这个问题嚼一嚼。', 60000, 90);
   try {
     const client = await getBackend();
     const result = await client.request('/v1/turn', { method: 'POST', signal: current.signal,
@@ -173,7 +172,7 @@ async function chat(text, image, automatic = false, requestId = null, kind = 'di
     if (result.reply) brain.respond(result.reply, result.expression);
     send(panel, 'companion:turn', { id: requestId, text, kind, ...result });
     return result;
-  } finally { if (controller === current) controller = null; brain.chatBusy = false; if (brain.action === 'think') brain.until = 0; }
+  } finally { if (controller === current) controller = null; brain.chatBusy = false; }
 }
 function registerIpc() {
   ipcMain.on('pet:ready', e => {
@@ -182,7 +181,7 @@ function registerIpc() {
     if (e.sender === pet.webContents && arg('capture')) setTimeout(async () => {
       try {
         // 截图测试等待素材解码完成，避免把空白窗口当作启动成功。
-        const receipt = await pet.webContents.executeJavaScript(`new Promise((resolve,reject)=>{const until=Date.now()+15000;function check(){if(assetsReady)requestAnimationFrame(()=>requestAnimationFrame(()=>resolve({assetsReady,flowReady:!!flowRenderer?.ready,spriteCount:Object.values(spriteFrames).reduce((n,a)=>n+Object.keys(a).length,0)})));else if(Date.now()>until)reject(new Error('Asset readiness timed out'));else setTimeout(check,50);}check();})`);
+        const receipt = await pet.webContents.executeJavaScript(`new Promise((resolve,reject)=>{const until=Date.now()+30000;function check(){if(assetsReady)requestAnimationFrame(()=>requestAnimationFrame(()=>resolve({assetsReady,paintedReady:Object.values(PetMotion.clips).every(c=>c.atlas.startsWith('painted-')),spriteCount:Object.values(spriteFrames).reduce((n,a)=>n+Object.keys(a).length,0)})));else if(Date.now()>until)reject(new Error('Asset readiness timed out'));else setTimeout(check,50);}check();})`);
         if (testMode) {
           receipt.backendReady = (await (await getBackend()).request('/v1/status')).ready;
           if (process.argv.includes('--test-speech')) { await speech.start(); receipt.speechReady = true; speech.stop(); }
@@ -327,7 +326,7 @@ function tick() {
   else if (now >= nextWalk) {
     const b = pet.getBounds(); const area = screen.getDisplayMatching(b).workArea;
     if (target === null) {
-      const span=160*settings.scale;
+    const span=80*settings.scale;
       const left=Math.max(b.x-span,support?support.left-b.width/2+28:area.x),right=Math.min(b.x+span,support?support.right-b.width/2-28:area.x+area.width-b.width);
       if(right-left<24*settings.scale){nextWalk=now+30000;return;}
       target=Math.round(left+Math.random()*(right-left));
@@ -344,7 +343,7 @@ function tick() {
     // 步态随真实路程推进；起步和刹车时不会脚快速蹬、身体却慢慢滑。
     send(pet,'pet:walk-offset',{offset:movement.offset,elapsed:walkTravel/(55*Math.max(.01,settings.scale))*1000});
     if(support)support.anchorX+=step;
-    if (Math.abs(delta) <= Math.abs(step)) { stopWalk(true); nextWalk = now + 12000 + Math.random() * 12000; savePosition(); }
+    if (Math.abs(delta) <= Math.abs(step)) { stopWalk(true); nextWalk = now + 180000 + Math.random() * 120000; savePosition(); }
   }
   if (settings.autoVision && settings.vision && !full && !locked && !controller && !drag && brain.mode === 'company' && now > autoVisionAt && lastForeign.handle && powerMonitor.getSystemIdleTime() < 60) {
     autoVisionAt = now + 120000;
