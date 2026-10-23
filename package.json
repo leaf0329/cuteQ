@@ -1,6 +1,6 @@
 {
   "name": "cuteq",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "本机大肥鱼桌宠：语音倾听、共同记忆与独立角色后台",
   "main": "src/main/main.cjs",
   "author": "YunYueSama",
@@ -9,7 +9,102 @@
   "engines": {
     "node": ">=24"
   },
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "check": "node scripts/check.cjs",
+    "icon": "node scripts/build-icon.mjs",
+    "test": "node --test tests/*.test.cjs",
+    "test:electron": "node scripts/smoke-electron.cjs",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win nsis portable",
+    "assets:build": "npm run assets:painted",
+    "assets:brand": "node scripts/build-brand.cjs",
+    "assets:fonts": "node scripts/build-fonts.cjs",
+    "test:integration": "node scripts/integration.cjs",
+    "backend": "node src/backend/cli.cjs",
+    "speech:prepare": "node scripts/download-speech.cjs",
+    "assets:painted": "node scripts/build-calm.cjs && node scripts/build-redrawn-sheets.cjs wave reading emotion-a emotion-b micro jump walk-mid walk sleep turn dance sneak && node scripts/build-fusion-keyframes.cjs && node scripts/bake-animations.cjs && node scripts/finalize-animations.cjs && node scripts/encode-own-motion.cjs",
+    "test:animation": "node scripts/animation-qa.cjs",
+    "assets:fusion": "node scripts/build-fusion-keyframes.cjs && node scripts/bake-animations.cjs cube curtsy && node scripts/encode-own-motion.cjs cube curtsy"
+  },
+  "build": {
+    "appId": "local.cuteq.desktop",
+    "productName": "cuteQ",
+    "asar": true,
+    "npmRebuild": false,
+    "directories": {
+      "output": "artifacts",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "assets/fonts/**/*",
+      "build/icon.png",
+      "codex-deepseek-pet/**/*",
+      "package.json",
+      "LICENSE",
+      "ASSET_LICENSE.md",
+      "resources/speech/**/*",
+      "docs/一期需求.md",
+      "NOTICE.md",
+      "使用说明.md",
+      "assets/whale-video/**/*",
+      "docs/融合说明.md",
+      "assets/dsh-pet/UPSTREAM-README.md",
+      "assets/dsh-pet/CODE-LICENSE-MIT.txt"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "cuteQ-Setup-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "cuteQ 大肥鱼"
+    },
+    "portable": {
+      "artifactName": "cuteQ-${version}-portable.exe"
+    },
+    "asarUnpack": [
+      "src/main/foreground.ps1",
+      "src/main/window-probe.cs",
+      "resources/speech/**/*",
+      "node_modules/sherpa-onnx-win-x64/**/*"
+    ],
+    "electronDist": "node_modules/electron/dist"
+  },
+  "devDependencies": {
+    "@fontsource/noto-serif-sc": "^5.3.0",
+    "electron": "43.1.0",
+    "electron-builder": "26.6.0",
+    "png-to-ico": "3.0.2",
+    "pngjs": "^7.0.0",
+    "sharp": "^0.35.4"
+  },
   "dependencies": {
     "sherpa-onnx-node": "^1.13.8"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leaf0329/cuteQ.git"
+  },
+  "homepage": "https://github.com/leaf0329/cuteQ"
 }

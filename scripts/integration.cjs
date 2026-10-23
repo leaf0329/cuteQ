@@ -1,0 +1,12 @@
+'use strict';
+const {spawn}=require('node:child_process'),fs=require('node:fs'),path=require('node:path'),os=require('node:os');
+const dir=fs.mkdtempSync(path.join(os.tmpdir(),'whale-integration-'));
+const complete=path.join(dir,'complete.json');
+const sherpa=require('sherpa-onnx-node');
+const wave=sherpa.readWave(path.join(__dirname,'../resources/speech/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17/test_wavs/zh.wav'));
+const samples=new Float32Array(wave.samples.length+wave.sampleRate*3);samples.set(wave.samples);
+const microphoneFile=path.join(dir,'microphone.wav');sherpa.writeWave(microphoneFile,{samples,sampleRate:wave.sampleRate});
+const child=spawn(require('electron'),[path.join(__dirname,'integration-entry.cjs'),`--test-user-data=${dir}`,`--integration-complete=${complete}`,'--panel','--use-fake-device-for-media-stream',`--use-file-for-fake-audio-capture=${microphoneFile}`,...(process.env.PET_TEST_EDGES?['--test-native-edges']:[])],{windowsHide:true,stdio:'inherit'});
+const timer=setTimeout(()=>child.kill(),90000);
+child.on('exit',(code,signal)=>{clearTimeout(timer);const finished=fs.existsSync(complete);fs.rmSync(dir,{recursive:true,force:true});process.exitCode=signal||code===null||!finished?1:code;});
+child.on('error',()=>{clearTimeout(timer);process.exitCode=1;});

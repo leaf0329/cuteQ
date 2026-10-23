@@ -182,7 +182,7 @@ function registerIpc() {
     if (e.sender === pet.webContents && arg('capture')) setTimeout(async () => {
       try {
         // 截图测试等待素材解码完成，避免把空白窗口当作启动成功。
-        const receipt = await pet.webContents.executeJavaScript(`new Promise((resolve,reject)=>{const until=Date.now()+30000;function check(){if(assetsReady)requestAnimationFrame(()=>requestAnimationFrame(()=>resolve({assetsReady,videoReady:player.current?.ready,videoBuffers:player.slots.length,motionSources:new Set(Object.values(PetMotion.clips).flatMap(c=>c.parts.map(p=>p.file))).size})));else if(Date.now()>until)reject(new Error('Asset readiness timed out'));else setTimeout(check,50);}check();})`);
+        const receipt = await pet.webContents.executeJavaScript(`new Promise((resolve,reject)=>{const until=Date.now()+30000;function check(){if(assetsReady)requestAnimationFrame(()=>requestAnimationFrame(()=>resolve({assetsReady,videoReady:player.current?.ready,artwork:PetMotion.source.identity,videoBuffers:player.slots.length,motionSources:new Set(Object.values(PetMotion.clips).flatMap(c=>c.parts.map(p=>p.file))).size})));else if(Date.now()>until)reject(new Error('Asset readiness timed out'));else setTimeout(check,50);}check();})`);
         if (testMode) {
           receipt.backendReady = (await (await getBackend()).request('/v1/status')).ready;
           if (process.argv.includes('--test-speech')) { await speech.start(); receipt.speechReady = true; speech.stop(); }

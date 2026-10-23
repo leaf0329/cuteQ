@@ -1,3 +1,5 @@
+> 历史来源说明：以下记录对应 0.3 比较版，视频已转存 [v0.3.0](https://github.com/leaf0329/cuteQ/tree/v0.3.0/assets/dsh-pet) 及其 Release。当前本地不再保留该套视频。
+
 # dsh-pet 动画素材来源
 
 原项目：[PC2005-cloud/dsh-pet](https://github.com/PC2005-cloud/dsh-pet)。固定提交：`48007b64ac0bebb2e97ac88344aed62de8399dd4`。

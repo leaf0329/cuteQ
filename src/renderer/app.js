@@ -9,7 +9,7 @@ let assetsReady=false,lastPose=null,previewing=false,previewSequence=0,walkRate=
 let poseKey='',transitionFrom=null,transitionAt=0;
 let clockOffset=Date.now()-performance.now();
 const player=new PetVideoPlayer(error=>{bubble.textContent='动作加载失败：'+error.message;bubble.classList.add('visible');});
-const hitCanvas=document.createElement('canvas');hitCanvas.width=160;hitCanvas.height=90;
+const hitCanvas=document.createElement('canvas');hitCanvas.width=PetMotion.source.width/4;hitCanvas.height=PetMotion.source.height/4;
 const hitContext=hitCanvas.getContext('2d',{willReadFrequently:true});let hitPixels=null,hitSerial=-1,hitSlot=null,hitAt=0;
 function resizeCanvas(){
  const width=300*(settings.scale??1),pixels=Math.max(1,Math.round(width*devicePixelRatio));
@@ -71,13 +71,13 @@ function updateHit(){
  let opaque=false;
  if(lastPose&&player.current){const p=lastPose,source=PetMotion.source,dx=x-300-p.x,dy=y-source.floorY-p.y,c=Math.cos(p.rotation),s=Math.sin(p.rotation);
   const sx=((c*dx+s*dy)/((p.flip?-1:1)*p.scaleX))/source.ratio+source.anchorX,sy=((-s*dx+c*dy)/p.scaleY)/source.ratio+source.anchorY;
-  if(sx>=0&&sx<640&&sy>=0&&sy<360){
+  if(sx>=0&&sx<source.width&&sy>=0&&sy<source.height){
    const slot=player.current,now=performance.now();
    // 仅鼠标经过角色时读取小尺寸透明掩码；视频纹理和命中缓存都有固定上限。
    if(!hitPixels||hitSlot!==slot||(slot.serial!==hitSerial&&now-hitAt>=100)){
-    hitContext.clearRect(0,0,160,90);hitContext.drawImage(slot.video,0,0,160,90);hitPixels=hitContext.getImageData(0,0,160,90).data;hitSlot=slot;hitSerial=slot.serial;hitAt=now;
+    hitContext.clearRect(0,0,hitCanvas.width,hitCanvas.height);hitContext.drawImage(slot.video,0,0,hitCanvas.width,hitCanvas.height);hitPixels=hitContext.getImageData(0,0,hitCanvas.width,hitCanvas.height).data;hitSlot=slot;hitSerial=slot.serial;hitAt=now;
    }
-   opaque=hitPixels[(Math.floor(sy/4)*160+Math.floor(sx/4))*4+3]>40;
+   opaque=hitPixels[(Math.floor(sy/4)*hitCanvas.width+Math.floor(sx/4))*4+3]>40;
   }
  }
  const hit=Boolean(down||opaque);

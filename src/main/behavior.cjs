@@ -2,6 +2,7 @@
 const {clips}=require('../renderer/motion.js');
 
 const ACTIONS = Object.freeze({
+  cube:[20],curtsy:[0],
   'meal-break':[7],'token-game':[20],'tail-sway':[0],'story-recover':[0],
   'stop-left':[0],'stop-right':[0],wake:[0],
   drag:[14],fall:[14],land:[0],
@@ -62,6 +63,7 @@ class Companion {
     if(action===this.action&&this.now()<this.until&&priority===this.priority)return false;
     // 有限动作的占用时间与动画一致，避免画面已回待机却仍被动作锁住数秒。
     const c=clips[action];if(c&&!c.loop&&!c.hold)duration=c.times.reduce((a,b)=>a+b,0);
+    if(action==='curl')duration=c.times.reduce((a,b)=>a+b,0)+30000;
     this.action = action; this.message = message; this.priority = priority;
     this.recovery=null;
     this.started = this.now(); this.until = this.started + duration; this.revision++;
@@ -73,9 +75,9 @@ class Companion {
     return true;
   }
   interact(kind) {
-    if(kind==='pet'&&['eat','meal-break','sneak','hum','token-game','review'].includes(this.action)&&this.now()<this.until)return false;
+    if(kind==='pet'&&['eat','meal-break','sneak','hum','token-game','review','cube'].includes(this.action)&&this.now()<this.until)return false;
     this.utterance = null;
-    if(['meal-break','token-game','tail-sway'].includes(kind))return this.play(kind,'',5000,80);
+    if(['meal-break','token-game','tail-sway','cube','curtsy'].includes(kind))return this.play(kind,'',5000,80);
     if (kind === 'drag') return this.play('drag', '呆毛！别碰歪了！', 60000, 100);
     if (kind === 'drop') { this.until = 0; return this.play('protest', '好啦，这里也行。', 2800, 100); }
     if (kind === 'feed') {

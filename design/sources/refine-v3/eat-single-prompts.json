@@ -1,0 +1,15 @@
+{
+  "tool": "built-in image_gen",
+  "assets": [
+    {
+      "name": "rice-under-chin",
+      "ref": "lift.png",
+      "prompt": "Use case: identity-preserve. Edit target is the supplied SINGLE full-body 1280x1280 keyframe of the blue-haired whale maid. This is an animation in-between, so preserve the exact canvas, transparent background, character size and placement, entire head, face, blue eyes, all hair, tail on viewer RIGHT, headpiece, dress, whale apron, skirt and planted feet. Same crisp line quality, same tiny hands, same camera; ONLY move the hands/forearms and change the specified rice. No redesign, no zoom, no blur, no repeated limbs, no shadows, no text. Lift the existing whole triangular onigiri and both existing tiny hands just a little, to a position HALFWAY between its current upper-chest position and the mouth: the top tip sits just below the chin and still does not touch the mouth. The rice ball MUST keep its exact original size and nori shape; do not enlarge it. Bend elbows a few degrees farther. Calm unchanged closed mouth. Keep every stationary pixel visually identical."
+    },
+    {
+      "name": "empty-hands-lowering",
+      "ref": "last-mouth.png",
+      "prompt": "Use case: identity-preserve. Edit target is the supplied SINGLE full-body 1280x1280 keyframe of the blue-haired whale maid. This is an animation in-between, so preserve the exact canvas, transparent background, character size and placement, entire head, face, blue eyes, all hair, tail on viewer RIGHT, headpiece, dress, whale apron, skirt and planted feet. Same crisp line quality, same tiny hands, same camera; ONLY move the hands/forearms and change the specified rice. No redesign, no zoom, no blur, no repeated limbs, no shadows, no text. The final tiny bite has been eaten. Remove ALL food completely. Lower both tiny hands a little toward the neck bow, halfway between the reference mouth-height hands and hands clasped over the waist. Hands visibly EMPTY, wrists relaxed, fingers gently curled. Keep exact hand size, upper arms, shoulders and torso shape. Tiny satisfied CLOSED mouth. No grain, nori or leftover rice anywhere. Keep the rest identical."
+    }
+  ]
+}

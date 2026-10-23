@@ -23,7 +23,7 @@ class PetVideoPlayer {
   slot.ready=false;slot.key=key;slot.video.pause();
   if(slot.file!==pose.file||slot.video.readyState<2){
    slot.file=pose.file;const loaded=this.wait(slot,'loadeddata',signal);
-   slot.video.src=`../../assets/dsh-pet/${encodeURIComponent(pose.file)}.webm`;slot.video.load();await loaded;
+   slot.video.src=`../../assets/whale-video/${encodeURIComponent(pose.file)}.webm`;slot.video.load();await loaded;
   }
   if(signal.aborted)throw new DOMException('Superseded','AbortError');
   if(Math.abs(slot.video.currentTime-pose.time)>.001){const sought=this.wait(slot,'seeked',signal);slot.video.currentTime=pose.time;await sought;}

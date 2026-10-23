@@ -1,15 +1,10 @@
 {
-  "version": "0.3.0",
-  "kind": "recovered-packaged-runtime",
-  "recoveredAt": "2026-10-23T12:31:37.572Z",
-  "source": "cuteQ-0.3.0-portable.exe/resources/app.asar",
-  "exclusions": [
-    "node_modules",
-    "resources/speech (downloadable models)"
-  ],
+  "version": "0.4.0",
+  "kind": "current-development-checkout",
+  "organizedAt": "2026-10-23T12:38:02.731Z",
   "upstream": {
     "repository": "https://github.com/YunYueSama/codex-deepseek-pet",
     "revision": "7661c8b"
   },
-  "limitations": "The shipped runtime package is preserved. Historical development scripts and dependency lockfiles were not bundled; this is not an original development checkout."
+  "note": "Current 0.4 runtime and authoring inputs, with obsolete files archived to release attachments. Release executables are the previously verified 0.4 builds; this directory cleanup did not introduce a new runtime feature."
 }
