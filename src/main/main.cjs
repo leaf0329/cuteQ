@@ -14,6 +14,7 @@ const { endpoint } = require('./chat.cjs');
 const { monitor } = require('./environment.cjs');
 const physics = require('./physics.cjs');
 const {advanceWalk}=require('./walk.cjs');
+const {turnDuration}=require('../renderer/motion.js');
 const root = path.join(__dirname, '../..');
 const arg = key => process.argv.find(v => v.startsWith(`--${key}=`))?.slice(key.length + 3);
 const testMode = Boolean(arg('test-user-data'));
@@ -181,7 +182,7 @@ function registerIpc() {
     if (e.sender === pet.webContents && arg('capture')) setTimeout(async () => {
       try {
         // 截图测试等待素材解码完成，避免把空白窗口当作启动成功。
-        const receipt = await pet.webContents.executeJavaScript(`new Promise((resolve,reject)=>{const until=Date.now()+30000;function check(){if(assetsReady)requestAnimationFrame(()=>requestAnimationFrame(()=>resolve({assetsReady,paintedReady:Object.values(PetMotion.clips).every(c=>c.atlas.startsWith('painted-')),spriteCount:Object.values(spriteFrames).reduce((n,a)=>n+Object.keys(a).length,0)})));else if(Date.now()>until)reject(new Error('Asset readiness timed out'));else setTimeout(check,50);}check();})`);
+        const receipt = await pet.webContents.executeJavaScript(`new Promise((resolve,reject)=>{const until=Date.now()+30000;function check(){if(assetsReady)requestAnimationFrame(()=>requestAnimationFrame(()=>resolve({assetsReady,videoReady:player.current?.ready,videoBuffers:player.slots.length,motionSources:new Set(Object.values(PetMotion.clips).flatMap(c=>c.parts.map(p=>p.file))).size})));else if(Date.now()>until)reject(new Error('Asset readiness timed out'));else setTimeout(check,50);}check();})`);
         if (testMode) {
           receipt.backendReady = (await (await getBackend()).request('/v1/status')).ready;
           if (process.argv.includes('--test-speech')) { await speech.start(); receipt.speechReady = true; speech.stop(); }
@@ -335,13 +336,13 @@ function tick() {
     const delta = target - b.x,direction = delta < 0 ? 'left' : 'right';
     if (lastWalkDirection !== direction) { if(!brain.play(direction, '', 30000, 1)){stopWalk();return;} lastWalkDirection = direction; }
     // 转身时不滑行，随后缓起步，接近目标时减速收步。
-    const startup=Math.max(0,Math.min(1,(now-brain.started-600)/300));
+    const startup=Math.max(0,Math.min(1,(now-brain.started-turnDuration)/300));
     const braking=Math.min(1,Math.max(.2,Math.abs(delta)/(24*settings.scale)));
     const movement=advanceWalk(delta,55*settings.scale*startup*braking*dt,walkRemainder);
     const step=movement.step;walkTravel+=Math.max(0,Math.abs(step)+movement.remainder-walkRemainder);walkRemainder=movement.remainder;
     pet.setBounds(fixedSizeBounds({ x: b.x + step, y: b.y }, size()), false);
     // 步态随真实路程推进；起步和刹车时不会脚快速蹬、身体却慢慢滑。
-    send(pet,'pet:walk-offset',{offset:movement.offset,elapsed:walkTravel/(55*Math.max(.01,settings.scale))*1000});
+    send(pet,'pet:walk-offset',{offset:movement.offset,elapsed:walkTravel/(55*Math.max(.01,settings.scale))*1000,rate:startup*braking});
     if(support)support.anchorX+=step;
     if (Math.abs(delta) <= Math.abs(step)) { stopWalk(true); nextWalk = now + 180000 + Math.random() * 120000; savePosition(); }
   }
