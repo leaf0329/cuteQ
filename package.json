@@ -1,0 +1,15 @@
+{
+  "name": "cuteq",
+  "version": "0.1.0",
+  "description": "本机大肥鱼桌宠：语音倾听、共同记忆与独立角色后台",
+  "main": "src/main/main.cjs",
+  "author": "YunYueSama",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": false,
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "sherpa-onnx-node": "^1.13.8"
+  }
+}
